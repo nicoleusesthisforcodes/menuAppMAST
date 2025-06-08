@@ -154,9 +154,19 @@ const AddItemsScreen = () => {
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [course, setCourse] = useState<Course>('starter');
-  
- 
+  const [errors, setErrors] = useState<{ name?: string; price?: string }>({});
+
+ const validate = () => { //function for error handling
+    const newErrors: typeof errors = {};
+
+    if (!name.trim()) newErrors.name = 'Dish name is required';
+    if (!price || isNaN(Number(price)) || Number(price) <= 0) newErrors.price = 'Enter a valid price';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
  const handleAdd = () => {
+   if (!validate()) return; //validates error handling
     if (!name || !price) return;
 
     const newDish = {
@@ -179,7 +189,7 @@ const AddItemsScreen = () => {
   
 
 //navogate back to home screen
-   Alert.alert('Success!', 'Dish added to the menu!');
+   Alert.alert('Success!', 'Dish added to the menu!');//alert to tell user a dish has been added
   setTimeout(() => {
     navigation.goBack();
   }, 1000);
@@ -216,11 +226,13 @@ const AddItemsScreen = () => {
       <View style={styles.spacer}></View>
       
           <TextInput
-            style={styles.input}
+           style={[styles.input, errors.name && styles.inputError]}
             placeholder="Enter Dish Name"
             value={name}
             onChangeText={setName}
+            
           />
+          {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
           <TextInput
             style={styles.input}
             placeholder="Enter Description"
@@ -228,12 +240,14 @@ const AddItemsScreen = () => {
             onChangeText={setDescription}
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, errors.price && styles.inputError]}
             placeholder="Enter Price"
             value={price}
             onChangeText={setPrice}
             keyboardType="numeric"
           />
+           {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
+
           
       <SelectList 
   setSelected={(val: string) => {
@@ -262,7 +276,29 @@ const CourseFilterScreen = () => {
   const [filter, setFilter] = useState<Course>('starter');
 const [selectedCourse, setSelectedCourse] = useState<string>('');
   
-  
+  const confirmdelete = (dishId: string) => {
+  Alert.alert(
+    'Confirm Delete',
+    'Are you sure you want to delete this dish?',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Yes',
+        onPress: () => {
+        //Are you sure alert
+          RemoveDish(dishId);
+
+          //Remove alert!
+          Alert.alert('Removed', ' ${item.name}  has been removed from the menu.');
+        },
+        style: 'destructive',
+      },
+    ]
+  );
+};
 
 const courseOptions = [ 
   { key: '1', value: 'starter' },
@@ -304,9 +340,9 @@ const filtered = selectedCourse
             <Button
         title="Remove"
         onPress={() => {
-          RemoveDish(item.id);
-          Alert.alert('Removed', `${item.name} has been removed from the menu.`);
-        }}
+          confirmdelete(item.id);
+           Alert.alert('Removed', `${item.name} has been removed from the menu.`);
+        }}//alert message when dish is removed
         color={'#BF0A31'}
       />
               
@@ -421,9 +457,15 @@ TitleBox:{
       borderWidth: 2,
   }, 
   countText: { marginTop: 15, fontSize: 16, fontWeight: 'bold' }, 
-
+inputError: {
+    borderColor: 'red',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 5,
+    marginLeft: 2,
 
   
   
 
-});
+}});
